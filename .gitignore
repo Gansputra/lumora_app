@@ -1,6 +1,5 @@
 # Gradle files
 .gradle/
-build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -32,3 +31,13 @@ google-services.json
 
 # Android Profiling
 *.hprof
+.env
+UTS_LUMORA.docx
+
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
