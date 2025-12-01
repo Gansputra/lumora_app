@@ -1,0 +1,8 @@
+# Auto-detect text files and normalize them
+* text=auto
+
+# Ensure Dart/Flutter lockfile uses LF line endings
+pubspec.lock text eol=lf
+
+# Ensure shell scripts keep LF
+*.sh text eol=lf
