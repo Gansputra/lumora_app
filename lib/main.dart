@@ -1,6 +1,6 @@
-import 'package:flashcard_generator/pages/halaman_masuk.dart';
-import 'package:flashcard_generator/pages/halaman_utama.dart';
-import 'package:flashcard_generator/pages/home_page.dart';
+import 'package:lumora_app/pages/halaman_masuk.dart';
+import 'package:lumora_app/pages/halaman_utama.dart';
+import 'package:lumora_app/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

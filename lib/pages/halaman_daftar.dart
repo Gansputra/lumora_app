@@ -1,5 +1,5 @@
-import 'package:flashcard_generator/pages/halaman_masuk.dart';
-import 'package:flashcard_generator/pages/halaman_utama.dart';
+import 'package:lumora_app/pages/halaman_masuk.dart';
+import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
