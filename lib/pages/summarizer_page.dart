@@ -3,7 +3,10 @@ import '../services/summarizer_service.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class SummarizerPage extends StatefulWidget {
-  const SummarizerPage({super.key});
+  final String? initialText;
+  final bool autoRun;
+
+  const SummarizerPage({super.key, this.initialText, this.autoRun = false});
 
   @override
   State<SummarizerPage> createState() => _SummarizerPageState();
@@ -13,6 +16,24 @@ class _SummarizerPageState extends State<SummarizerPage> {
   final TextEditingController _controller = TextEditingController();
   String _result = "";
   bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialText != null && widget.initialText!.isNotEmpty) {
+      // sanitize possible invalid chars
+      var cleaned = widget.initialText!
+          .replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
+      cleaned = cleaned.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
+      _controller.text = cleaned;
+    }
+    if (widget.autoRun) {
+      // Delay to ensure build/context ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _summarize();
+      });
+    }
+  }
 
   Future<void> _summarize() async {
     final text = _controller.text.trim();

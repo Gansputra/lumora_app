@@ -3,7 +3,10 @@ import '../services/flashcard_service.dart';
 import 'package:flip_card/flip_card.dart';
 
 class Flashcard extends StatefulWidget {
-  const Flashcard({super.key});
+  final String? initialText;
+  final bool autoGenerate;
+
+  const Flashcard({super.key, this.initialText, this.autoGenerate = false});
 
   @override
   State<Flashcard> createState() => _FlashcardState();
@@ -32,6 +35,47 @@ class _FlashcardState extends State<Flashcard> {
   List<Map<String, String>> flashcards = [];
   String output = "";
   bool isLoading = false;
+  int currentIndex = 0;
+  late GlobalKey<FlipCardState> _flipCardKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _flipCardKey = GlobalKey<FlipCardState>();
+    if (widget.initialText != null && widget.initialText!.isNotEmpty) {
+      var cleaned = widget.initialText!.replaceAll(
+        RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'),
+        '',
+      );
+      cleaned = cleaned.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
+      controller.text = cleaned;
+    }
+    if (widget.autoGenerate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        generate();
+      });
+    }
+  }
+
+  void goNext() {
+    if (currentIndex < flashcards.length - 1) {
+      // Reset flip card ke pertanyaan sebelum navigasi
+      if (_flipCardKey.currentState?.isFront == false) {
+        _flipCardKey.currentState?.toggleCard();
+      }
+      setState(() => currentIndex++);
+    }
+  }
+
+  void goPrevious() {
+    if (currentIndex > 0) {
+      // Reset flip card ke pertanyaan sebelum navigasi
+      if (_flipCardKey.currentState?.isFront == false) {
+        _flipCardKey.currentState?.toggleCard();
+      }
+      setState(() => currentIndex--);
+    }
+  }
 
   generate() async {
     final text = controller.text.trim();
@@ -84,7 +128,7 @@ class _FlashcardState extends State<Flashcard> {
             ),
             const SizedBox(height: 12),
 
-            // 📄 Hasilnya
+            // 📄 Hasilnya - Tampilan 1 kartu dengan navigasi kanan-kiri
             Expanded(
               child: flashcards.isEmpty
                   ? SingleChildScrollView(
@@ -94,43 +138,176 @@ class _FlashcardState extends State<Flashcard> {
                             : output,
                       ),
                     )
-                  : ListView.builder(
-                      itemCount: flashcards.length,
-                      itemBuilder: (context, index) {
-                        final card = flashcards[index];
-                        return FlipCard(
-                          direction: FlipDirection.HORIZONTAL,
-                          front: Card(
-                            color: Colors.blue.shade50,
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: Container(
-                              height: 120,
-                              alignment: Alignment.center,
-                              child: Text(
-                                card['question']!,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Kartu besar tegak lurus
+                        Expanded(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: FlipCard(
+                                key: _flipCardKey,
+                                direction: FlipDirection.VERTICAL,
+                                front: Card(
+                                  elevation: 8,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  color: Colors.blue.shade50,
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 300,
+                                    ),
+                                    padding: const EdgeInsets.all(24),
+                                    alignment: Alignment.center,
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Text(
+                                          "Pertanyaan",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          flashcards[currentIndex]['question']!,
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1.5,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          "Tap untuk lihat jawaban",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.blue,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                textAlign: TextAlign.center,
+                                back: Card(
+                                  elevation: 8,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  color: Colors.green.shade50,
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 300,
+                                    ),
+                                    padding: const EdgeInsets.all(24),
+                                    alignment: Alignment.center,
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Text(
+                                          "Jawaban",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          flashcards[currentIndex]['answer']!,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            height: 1.5,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          "Tap untuk lihat pertanyaan",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.green,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          back: Card(
-                            color: Colors.green.shade50,
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: Container(
-                              height: 120,
-                              alignment: Alignment.center,
-                              child: Text(
-                                card['answer']!,
-                                style: const TextStyle(fontSize: 18),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Navigation dan counter
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 20,
                           ),
-                        );
-                      },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Tombol kiri (previous)
+                              ElevatedButton.icon(
+                                onPressed: currentIndex > 0 ? goPrevious : null,
+                                icon: const Icon(Icons.arrow_back),
+                                label: const Text("Sebelumnya"),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+
+                              // Counter
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade100,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "${currentIndex + 1} / ${flashcards.length}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ),
+
+                              // Tombol kanan (next)
+                              ElevatedButton.icon(
+                                onPressed:
+                                    currentIndex < flashcards.length - 1
+                                        ? goNext
+                                        : null,
+                                icon: const Icon(Icons.arrow_forward),
+                                label: const Text("Selanjutnya"),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
             ),
           ],

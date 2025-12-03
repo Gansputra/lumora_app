@@ -1,11 +1,29 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'flashcard_page.dart';
 import '../widgets/tool_card.dart';
 import 'summarizer_page.dart';
 import 'dart:ui';
+import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String? uploadedFileName;
+  String? extractedText;
+
+  String _sanitize(String s) {
+    // remove control chars (except newline/tab) and surrogate code units
+    var cleaned = s.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
+    cleaned = cleaned.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
+    return cleaned;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,14 +68,9 @@ class HomePage extends StatelessWidget {
         ),
         title: Row(
           children: [
-            // Logo di kiri
-            Image.asset(
-              'assets/images/logo_lumora.png', // ganti path sesuai punya lu
-              height: 28,
-            ),
+            Image.asset('assets/images/logo_lumora.png', height: 28),
             const SizedBox(width: 10),
 
-            // Tulisan "Lumora"
             const Text(
               'Lumora',
               style: TextStyle(
@@ -104,6 +117,81 @@ class HomePage extends StatelessWidget {
               "Pilih tools yang mau kamu pakai hari ini:",
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
+
+            // Upload area: show button when no file, otherwise show filename
+            if (uploadedFileName == null) ...[
+              ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.12),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 20,
+                ),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              icon: const Icon(Icons.picture_as_pdf_rounded, size: 22),
+              label: const Text(
+                "Upload & Baca Dokumen PDF",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              onPressed: () async {
+                final file = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                );
+
+                if (file != null && file.files.single.path != null) {
+                  final bytes = File(file.files.single.path!).readAsBytesSync();
+                  final document = PdfDocument(inputBytes: bytes);
+
+                  final text = PdfTextExtractor(document).extractText();
+                  document.dispose();
+
+                  setState(() {
+                    uploadedFileName = file.files.single.name;
+                    extractedText = _sanitize(text);
+                  });
+                }
+              },
+            ),
+            ] else ...[
+              // show uploaded filename with actions
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        uploadedFileName!,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          uploadedFileName = null;
+                          extractedText = null;
+                        });
+                      },
+                      child: const Text('Ganti', style: TextStyle(color: Colors.white)),
+                    )
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 5),
 
             // GridView tetap sama
@@ -126,10 +214,30 @@ class HomePage extends StatelessWidget {
                   description: tool['desc'] as String,
                   icon: tool['icon'] as IconData,
                   onTap: () {
+                    // If tool has a page and we have extracted text, pass it via constructor
                     if (page != null) {
+                      if (extractedText == null || extractedText!.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Silakan upload PDF terlebih dahulu.')),
+                        );
+                        return;
+                      }
+
+                      // Create the page and request it to auto-run processing when possible
+                      Widget targetPage;
+                      try {
+                        targetPage = (page is SummarizerPage)
+                            ? SummarizerPage(initialText: extractedText!, autoRun: true)
+                            : (page is Flashcard)
+                                ? Flashcard(initialText: extractedText!, autoGenerate: true)
+                                : page;
+                      } catch (_) {
+                        targetPage = page;
+                      }
+
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => page),
+                        MaterialPageRoute(builder: (_) => targetPage),
                       );
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
