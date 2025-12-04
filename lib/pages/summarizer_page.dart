@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/summarizer_service.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:lumora_app/widgets/animated_dots_loader.dart';
 
 class SummarizerPage extends StatefulWidget {
   final String? initialText;
@@ -21,18 +22,19 @@ class _SummarizerPageState extends State<SummarizerPage> {
   void initState() {
     super.initState();
     if (widget.initialText != null && widget.initialText!.isNotEmpty) {
-      // sanitize possible invalid chars
-      var cleaned = widget.initialText!
-          .replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
-      cleaned = cleaned.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
-      _controller.text = cleaned;
+      _controller.text = widget.initialText!;
+      if (widget.autoRun) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _summarize();
+        });
+      }
     }
-    if (widget.autoRun) {
-      // Delay to ensure build/context ready
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _summarize();
-      });
-    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _summarize() async {
@@ -109,13 +111,9 @@ class _SummarizerPageState extends State<SummarizerPage> {
                   ),
                 ),
                 child: _loading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
+                    ? const AnimatedDotsLoader(
+                        text: 'Sedang Mengerjakan',
+                        color: Colors.white,
                       )
                     : const Text(
                         "Ringkas Teks",

@@ -15,14 +15,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? uploadedFileName;
-  String? extractedText;
+  String? _uploadedFileName;
+  String? _extractedText;
 
-  String _sanitize(String s) {
-    // remove control chars (except newline/tab) and surrogate code units
-    var cleaned = s.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
-    cleaned = cleaned.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
-    return cleaned;
+  bool get _hasPdf =>
+      _extractedText != null && _extractedText!.trim().isNotEmpty;
+
+  String _sanitize(String input) {
+    // remove control characters and lone surrogates that may break rendering
+    var out = input.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
+    out = out.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
+    return out;
   }
 
   @override
@@ -32,13 +35,13 @@ class _HomePageState extends State<HomePage> {
         'title': 'AI Summarizer',
         'desc': 'Ringkas dokumen panjang jadi singkat & padat',
         'icon': Icons.article_outlined,
-        'page': SummarizerPage(),
+        'page': SummarizerPage(initialText: _extractedText, autoRun: true),
       },
       {
         'title': 'Flashcard Generator',
         'desc': 'Ubah materi jadi kartu belajar interaktif',
         'icon': Icons.style_outlined,
-        'page': const Flashcard(),
+        'page': Flashcard(initialText: _extractedText, autoGenerate: true),
       },
       {
         'title': 'Quiz Generator',
@@ -118,9 +121,7 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
 
-            // Upload area: show button when no file, otherwise show filename
-            if (uploadedFileName == null) ...[
-              ElevatedButton.icon(
+            ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white.withOpacity(0.12),
                 foregroundColor: Colors.white,
@@ -139,6 +140,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 final file = await FilePicker.platform.pickFiles(
                   type: FileType.custom,
                   allowedExtensions: ['pdf'],
@@ -148,51 +150,40 @@ class _HomePageState extends State<HomePage> {
                   final bytes = File(file.files.single.path!).readAsBytesSync();
                   final document = PdfDocument(inputBytes: bytes);
 
-                  final text = PdfTextExtractor(document).extractText();
+                  String extractedText = PdfTextExtractor(
+                    document,
+                  ).extractText();
                   document.dispose();
 
+                  final sanitized = _sanitize(extractedText);
+                  if (!mounted) return;
+
                   setState(() {
-                    uploadedFileName = file.files.single.name;
-                    extractedText = _sanitize(text);
+                    _uploadedFileName = file.files.single.name;
+                    _extractedText = sanitized;
                   });
+
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'PDF dibaca: ${_uploadedFileName ?? "(nama tidak diketahui)"}',
+                      ),
+                    ),
+                  );
                 }
               },
             ),
-            ] else ...[
-              // show uploaded filename with actions
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Text(
-                        uploadedFileName!,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          uploadedFileName = null;
-                          extractedText = null;
-                        });
-                      },
-                      child: const Text('Ganti', style: TextStyle(color: Colors.white)),
-                    )
-                  ],
-                ),
-              ),
-            ],
+
             const SizedBox(height: 5),
+
+            if (_uploadedFileName != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'File: ${_uploadedFileName!}',
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+            ],
 
             // GridView tetap sama
             GridView.builder(
@@ -209,44 +200,38 @@ class _HomePageState extends State<HomePage> {
                 final tool = tools[index];
                 final Widget? page = tool['page'] as Widget?;
 
-                return ToolCard(
-                  title: tool['title'] as String,
-                  description: tool['desc'] as String,
-                  icon: tool['icon'] as IconData,
-                  onTap: () {
-                    // If tool has a page and we have extracted text, pass it via constructor
-                    if (page != null) {
-                      if (extractedText == null || extractedText!.trim().isEmpty) {
+                final bool enabled = _hasPdf;
+
+                return Opacity(
+                  opacity: enabled ? 1.0 : 0.6,
+                  child: ToolCard(
+                    title: tool['title'] as String,
+                    description: tool['desc'] as String,
+                    icon: tool['icon'] as IconData,
+                    onTap: () {
+                      if (!enabled) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Silakan upload PDF terlebih dahulu.')),
+                          const SnackBar(
+                            content: Text('Silakan upload PDF terlebih dahulu'),
+                          ),
                         );
                         return;
                       }
 
-                      // Create the page and request it to auto-run processing when possible
-                      Widget targetPage;
-                      try {
-                        targetPage = (page is SummarizerPage)
-                            ? SummarizerPage(initialText: extractedText!, autoRun: true)
-                            : (page is Flashcard)
-                                ? Flashcard(initialText: extractedText!, autoGenerate: true)
-                                : page;
-                      } catch (_) {
-                        targetPage = page;
+                      if (page != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => page),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Fitur ini masih coming soon 🚧'),
+                          ),
+                        );
                       }
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => targetPage),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Fitur ini masih coming soon 🚧'),
-                        ),
-                      );
-                    }
-                  },
+                    },
+                  ),
                 );
               },
             ),

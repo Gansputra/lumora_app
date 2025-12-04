@@ -5,6 +5,7 @@ class ToolCard extends StatelessWidget {
   final String description;
   final IconData icon;
   final VoidCallback onTap;
+  final Widget? loadingWidget;
 
   const ToolCard({
     super.key,
@@ -12,6 +13,7 @@ class ToolCard extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.onTap,
+    this.loadingWidget,
   });
 
   @override

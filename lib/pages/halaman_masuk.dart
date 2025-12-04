@@ -1,4 +1,5 @@
 import 'package:lumora_app/pages/halaman_utama.dart';
+import 'package:lumora_app/pages/halaman_daftar.dart';
 import 'package:lumora_app/pages/home_page.dart';
 import 'package:flutter/material.dart';
 
@@ -126,7 +127,39 @@ class HalamanMasuk extends StatelessWidget {
                       obscureText: true,
                     ),
                     const SizedBox(height: 16),
-                    // Daftar button
+
+                    // Belum punya akun? Daftar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Belum punya akun? ',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HalamanDaftar(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Daftar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Masuk button
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
@@ -151,7 +184,6 @@ class HalamanMasuk extends StatelessWidget {
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
