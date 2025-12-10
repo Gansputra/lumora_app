@@ -2,9 +2,83 @@ import 'package:lumora_app/pages/halaman_masuk.dart';
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bcrypt/bcrypt.dart';
 
-class HalamanDaftar extends StatelessWidget {
+class HalamanDaftar extends StatefulWidget {
   const HalamanDaftar({Key? key}) : super(key: key);
+
+  @override
+  State<HalamanDaftar> createState() => _HalamanDaftarState();
+}
+
+class _HalamanDaftarState extends State<HalamanDaftar> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _register(BuildContext context) async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirm = _confirmController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirm.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Semua field harus diisi')));
+      return;
+    }
+    if (password != confirm) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Password tidak cocok')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      // Hash the password using bcrypt before storing
+      final hashed = BCrypt.hashpw(password, BCrypt.gensalt());
+      final response = await Supabase.instance.client.from('users').insert({
+        'name': name,
+        'email': email,
+        'password': hashed,
+        'created_at': DateTime.now().toIso8601String(),
+      }).select();
+
+      if (response.isNotEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pendaftaran berhasil')));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HalamanMasuk()),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gagal mendaftar')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,21 +192,28 @@ class HalamanDaftar extends StatelessWidget {
                     const SizedBox(height: 30),
 
                     // Input Fields
-                    _buildTextField(icon: Icons.person, hintText: 'Nama'),
+                    _buildTextField(
+                      controller: _nameController,
+                      icon: Icons.person,
+                      hintText: 'Nama',
+                    ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _emailController,
                       icon: Icons.email_outlined,
                       hintText: 'E-mail',
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _passwordController,
                       icon: Icons.lock,
                       hintText: 'Password',
                       obscureText: true,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _confirmController,
                       icon: Icons.verified_user,
                       hintText: 'Confirm Password',
                       obscureText: true,
@@ -165,9 +246,7 @@ class HalamanDaftar extends StatelessWidget {
                     // Daftar button
                     Center(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Action daftar
-                        },
+                        onPressed: _isLoading ? null : () => _register(context),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                             horizontal: 120,
@@ -178,15 +257,24 @@ class HalamanDaftar extends StatelessWidget {
                           ),
                           backgroundColor: Color(0xFF2050B4),
                         ),
-                        child: const Text(
-                          'DAFTAR',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'DAFTAR',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
                       ),
                     ),
 
@@ -230,6 +318,7 @@ class HalamanDaftar extends StatelessWidget {
   }
 
   Widget _buildTextField({
+    TextEditingController? controller,
     required IconData icon,
     required String hintText,
     bool obscureText = false,
@@ -246,6 +335,7 @@ class HalamanDaftar extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
+        controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         style: TextStyle(color: Colors.white),

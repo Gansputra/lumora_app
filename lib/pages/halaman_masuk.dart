@@ -1,12 +1,125 @@
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:lumora_app/pages/halaman_daftar.dart';
-import 'package:lumora_app/pages/home_page.dart';
+// import 'package:lumora_app/pages/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:lumora_app/pages/home_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bcrypt/bcrypt.dart';
 
-class HalamanMasuk extends StatelessWidget {
+class HalamanMasuk extends StatefulWidget {
   const HalamanMasuk({Key? key}) : super(key: key);
 
   @override
+  State<HalamanMasuk> createState() => _HalamanMasukState();
+}
+
+class _HalamanMasukState extends State<HalamanMasuk> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login(BuildContext context) async {
+    final input = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (input.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email/username dan password harus diisi'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      // Query by email OR name (username)
+      final response = await Supabase.instance.client
+          .from('users')
+          .select('name,password')
+          .or('email.eq.$input,name.eq.$input')
+          .limit(1);
+
+      if (response.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User tidak ditemukan')));
+        return;
+      }
+
+      final row = response[0];
+      final dynamic storedRaw = row['password'];
+      final dynamic nameRaw = row['name'];
+      final String userName = nameRaw != null ? nameRaw.toString() : '';
+
+      if (storedRaw == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password tidak ditemukan untuk user ini'),
+          ),
+        );
+        return;
+      }
+
+      final stored = storedRaw.toString().trim();
+
+      // If bcrypt stored
+      if (stored.startsWith(r'$2')) {
+        try {
+          final ok = BCrypt.checkpw(password, stored);
+          if (ok) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Login berhasil')));
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(userName: userName),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Email atau password salah')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error saat verifikasi bcrypt: $e')),
+          );
+        }
+        return;
+      }
+
+      // fallback plaintext
+      if (stored == password) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login berhasil')));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage(userName: userName)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email atau password salah')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Terjadi error: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -116,12 +229,14 @@ class HalamanMasuk extends StatelessWidget {
 
                     // Input Fields
                     _buildTextField(
+                      controller: _emailController,
                       icon: Icons.email_outlined,
-                      hintText: 'E-mail',
+                      hintText: 'E-mail atau Username',
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
+                      controller: _passwordController,
                       icon: Icons.lock,
                       hintText: 'Password',
                       obscureText: true,
@@ -162,12 +277,7 @@ class HalamanMasuk extends StatelessWidget {
                     // Masuk button
                     Center(
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => HomePage()),
-                          );
-                        },
+                        onPressed: _isLoading ? null : () => _login(context),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                             horizontal: 120,
@@ -178,14 +288,23 @@ class HalamanMasuk extends StatelessWidget {
                           ),
                           backgroundColor: Color(0xFF2050B4),
                         ),
-                        child: const Text(
-                          'Masuk',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'Masuk',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
 
@@ -201,6 +320,7 @@ class HalamanMasuk extends StatelessWidget {
   }
 
   Widget _buildTextField({
+    TextEditingController? controller,
     required IconData icon,
     required String hintText,
     bool obscureText = false,
@@ -217,6 +337,7 @@ class HalamanMasuk extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
+        controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         style: TextStyle(color: Colors.white),

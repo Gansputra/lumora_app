@@ -8,7 +8,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? userName;
+  const HomePage({super.key, this.userName});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -56,6 +57,10 @@ class _HomePageState extends State<HomePage> {
         'page': null, // nanti juga
       },
     ];
+
+    final displayName = widget.userName != null && widget.userName!.isNotEmpty
+        ? widget.userName!
+        : null;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -107,9 +112,11 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              "Selamat datang 👋",
-              style: TextStyle(
+            Text(
+              displayName != null
+                  ? 'Selamat datang, $displayName'
+                  : 'Selamat datang 👋',
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
