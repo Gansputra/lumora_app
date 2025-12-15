@@ -2,6 +2,7 @@ import 'package:lumora_app/pages/halaman_masuk.dart';
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:lumora_app/pages/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 
@@ -40,6 +41,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
       ).showSnackBar(const SnackBar(content: Text('Semua field harus diisi')));
       return;
     }
+
     if (password != confirm) {
       ScaffoldMessenger.of(
         context,
@@ -48,29 +50,31 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
     }
 
     setState(() => _isLoading = true);
-    try {
-      // Hash the password using bcrypt before storing
-      final hashed = BCrypt.hashpw(password, BCrypt.gensalt());
-      final response = await Supabase.instance.client.from('users').insert({
-        'name': name,
-        'email': email,
-        'password': hashed,
-        'created_at': DateTime.now().toIso8601String(),
-      }).select();
 
-      if (response.isNotEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Pendaftaran berhasil')));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HalamanMasuk()),
-        );
-      } else {
+    try {
+      // 1️⃣ Signup ke Supabase Auth
+      final res = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+      );
+
+      final user = res.user;
+      if (user == null) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Gagal mendaftar')));
+        return;
       }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Pendaftaran berhasil')));
+
+      // optional: langsung arahkan ke login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HalamanMasuk()),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,

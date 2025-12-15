@@ -40,77 +40,72 @@ class _HalamanMasukState extends State<HalamanMasuk> {
 
     setState(() => _isLoading = true);
     try {
-      // Query by email OR name (username)
-      final response = await Supabase.instance.client
-          .from('users')
-          .select('name,password')
-          .or('email.eq.$input,name.eq.$input')
-          .limit(1);
-
-      if (response.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User tidak ditemukan')));
-        return;
-      }
-
-      final row = response[0];
-      final dynamic storedRaw = row['password'];
-      final dynamic nameRaw = row['name'];
-      final String userName = nameRaw != null ? nameRaw.toString() : '';
-
-      if (storedRaw == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password tidak ditemukan untuk user ini'),
-          ),
-        );
-        return;
-      }
-
-      final stored = storedRaw.toString().trim();
-
-      // If bcrypt stored
-      if (stored.startsWith(r'$2')) {
-        try {
-          final ok = BCrypt.checkpw(password, stored);
-          if (ok) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Login berhasil')));
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomePage(userName: userName),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Email atau password salah')),
-            );
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error saat verifikasi bcrypt: $e')),
-          );
-        }
-        return;
-      }
-
-      // fallback plaintext
-      if (stored == password) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login berhasil')));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage(userName: userName)),
-        );
+      String? email;
+      String? userName;
+      // Jika input mengandung '@', anggap sebagai email
+      if (input.contains('@')) {
+        email = input;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email atau password salah')),
-        );
+        // Cari email berdasarkan username di tabel profiles
+        final profileRes = await Supabase.instance.client
+            .from('profiles')
+            .select('id, username, email')
+            .eq('username', input)
+            .limit(1)
+            .maybeSingle();
+        if (profileRes == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Username tidak ditemukan')),
+          );
+          return;
+        }
+        email = profileRes['email'] as String?;
+        userName = profileRes['username'] as String?;
+        if (email == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Email tidak ditemukan untuk username ini'),
+            ),
+          );
+          return;
+        }
       }
+
+      // Login ke Supabase Auth
+      final authRes = await Supabase.instance.client.auth.signInWithPassword(
+        email: email!,
+        password: password,
+      );
+
+      if (authRes.user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email/username atau password salah')),
+        );
+        return;
+      }
+
+      // Ambil username jika login pakai email
+      if (userName == null) {
+        // Cari username di profiles
+        final profileRes = await Supabase.instance.client
+            .from('profiles')
+            .select('username')
+            .eq('id', authRes.user!.id)
+            .maybeSingle();
+        userName = profileRes != null
+            ? profileRes['username'] as String?
+            : null;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login berhasil')));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(userName: userName ?? email!),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
