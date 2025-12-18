@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/flashcard_service.dart';
+import '../services/gemini_service.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:lumora_app/widgets/animated_dots_loader.dart';
 
@@ -90,7 +90,7 @@ class _FlashcardState extends State<Flashcard> {
     setState(() => isLoading = true);
 
     try {
-      final res = await AIService.generateResponse(text);
+      final res = await GeminiService.generateFlashcard(text);
       final cards = parseFlashcards(res);
 
       setState(() {

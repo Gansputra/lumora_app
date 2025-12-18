@@ -2,9 +2,7 @@ import 'package:lumora_app/pages/halaman_masuk.dart';
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:lumora_app/pages/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bcrypt/bcrypt.dart';
 
 class HalamanDaftar extends StatefulWidget {
   const HalamanDaftar({Key? key}) : super(key: key);

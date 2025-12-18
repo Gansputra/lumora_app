@@ -21,56 +21,60 @@ class ToolCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        color: Colors.white.withOpacity(0.95),
         child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          height: 100,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ICON ATAS
-              Icon(icon, size: 40, color: Colors.blueAccent),
-
-              const SizedBox(height: 12),
-
-              // JUDUL (wrap + ellipsis)
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+              // Icon kiri
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                padding: const EdgeInsets.all(10),
+                child: Icon(icon, size: 32, color: Colors.blueAccent),
               ),
-
-              const SizedBox(height: 6),
-
-              // DESKRIPSI (wrap + ellipsis)
+              const SizedBox(width: 18),
+              // Judul & deskripsi
               Expanded(
-                child: Text(
-                  description,
-                  style: const TextStyle(fontSize: 10, color: Colors.black54),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A3F8A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 1),
-
-              // ICON PANAH DI BAWAH KANAN
-              Align(
-                alignment: Alignment.bottomRight,
-                child: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: Colors.grey,
-                ),
+              // Panah kanan
+              const SizedBox(width: 10),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 20,
+                color: Colors.grey.shade400,
               ),
             ],
           ),

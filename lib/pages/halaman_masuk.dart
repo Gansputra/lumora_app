@@ -1,10 +1,8 @@
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:lumora_app/pages/halaman_daftar.dart';
-// import 'package:lumora_app/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:lumora_app/pages/home_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bcrypt/bcrypt.dart';
 
 class HalamanMasuk extends StatefulWidget {
   const HalamanMasuk({Key? key}) : super(key: key);
@@ -73,7 +71,7 @@ class _HalamanMasukState extends State<HalamanMasuk> {
 
       // Login ke Supabase Auth
       final authRes = await Supabase.instance.client.auth.signInWithPassword(
-        email: email!,
+        email: email,
         password: password,
       );
 

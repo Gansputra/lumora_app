@@ -16,18 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _uploadedFileName;
-  String? _extractedText;
-
-  bool get _hasPdf =>
-      _extractedText != null && _extractedText!.trim().isNotEmpty;
-
-  String _sanitize(String input) {
-    // remove control characters and lone surrogates that may break rendering
-    var out = input.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '');
-    out = out.replaceAll(RegExp(r'[\uD800-\uDFFF]'), '');
-    return out;
-  }
+  // PDF upload & extracted text logic dihapus, tools bisa langsung digunakan
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +25,13 @@ class _HomePageState extends State<HomePage> {
         'title': 'AI Summarizer',
         'desc': 'Ringkas dokumen panjang jadi singkat & padat',
         'icon': Icons.article_outlined,
-        'page': SummarizerPage(initialText: _extractedText, autoRun: true),
+        'page': const SummarizerPage(),
       },
       {
         'title': 'Flashcard Generator',
         'desc': 'Ubah materi jadi kartu belajar interaktif',
         'icon': Icons.style_outlined,
-        'page': Flashcard(initialText: _extractedText, autoGenerate: true),
+        'page': const Flashcard(),
       },
       {
         'title': 'Quiz Generator',
@@ -61,7 +50,6 @@ class _HomePageState extends State<HomePage> {
     final displayName = widget.userName != null && widget.userName!.isNotEmpty
         ? widget.userName!
         : null;
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -78,7 +66,6 @@ class _HomePageState extends State<HomePage> {
           children: [
             Image.asset('assets/images/logo_lumora.png', height: 28),
             const SizedBox(width: 10),
-
             const Text(
               'Lumora',
               style: TextStyle(
@@ -91,7 +78,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -106,9 +92,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-
         padding: EdgeInsets.fromLTRB(16, kToolbarHeight + 64, 16, 16),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -127,104 +111,21 @@ class _HomePageState extends State<HomePage> {
               "Pilih tools yang mau kamu pakai hari ini:",
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
-
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.12),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 14,
-                  horizontal: 20,
-                ),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              icon: const Icon(Icons.picture_as_pdf_rounded, size: 22),
-              label: const Text(
-                "Upload & Baca Dokumen PDF",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final file = await FilePicker.platform.pickFiles(
-                  type: FileType.custom,
-                  allowedExtensions: ['pdf'],
-                );
-
-                if (file != null && file.files.single.path != null) {
-                  final bytes = File(file.files.single.path!).readAsBytesSync();
-                  final document = PdfDocument(inputBytes: bytes);
-
-                  String extractedText = PdfTextExtractor(
-                    document,
-                  ).extractText();
-                  document.dispose();
-
-                  final sanitized = _sanitize(extractedText);
-                  if (!mounted) return;
-
-                  setState(() {
-                    _uploadedFileName = file.files.single.name;
-                    _extractedText = sanitized;
-                  });
-
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'PDF dibaca: ${_uploadedFileName ?? "(nama tidak diketahui)"}',
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-
-            const SizedBox(height: 5),
-
-            if (_uploadedFileName != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'File: ${_uploadedFileName!}',
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-              const SizedBox(height: 8),
-            ],
-
-            // GridView tetap sama
-            GridView.builder(
-              itemCount: tools.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemBuilder: (context, index) {
-                final tool = tools[index];
-                final Widget? page = tool['page'] as Widget?;
-
-                final bool enabled = _hasPdf;
-
-                return Opacity(
-                  opacity: enabled ? 1.0 : 0.6,
-                  child: ToolCard(
+            // ListView vertikal untuk ToolCard
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.separated(
+                itemCount: tools.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
+                itemBuilder: (context, index) {
+                  final tool = tools[index];
+                  final Widget? page = tool['page'] as Widget?;
+                  return ToolCard(
                     title: tool['title'] as String,
                     description: tool['desc'] as String,
                     icon: tool['icon'] as IconData,
                     onTap: () {
-                      if (!enabled) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Silakan upload PDF terlebih dahulu'),
-                          ),
-                        );
-                        return;
-                      }
-
                       if (page != null) {
                         Navigator.push(
                           context,
@@ -238,9 +139,9 @@ class _HomePageState extends State<HomePage> {
                         );
                       }
                     },
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ],
         ),
