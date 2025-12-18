@@ -3,14 +3,14 @@ import '../services/gemini_service.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:lumora_app/widgets/animated_dots_loader.dart';
 
-class Flashcard extends StatefulWidget {
+class FlashcardPage extends StatefulWidget {
   final String? initialText;
   final bool autoGenerate;
 
-  const Flashcard({super.key, this.initialText, this.autoGenerate = false});
+  const FlashcardPage({super.key, this.initialText, this.autoGenerate = false});
 
   @override
-  State<Flashcard> createState() => _FlashcardState();
+  State<FlashcardPage> createState() => _FlashcardState();
 }
 
 List<Map<String, String>> parseFlashcards(String raw) {
@@ -31,7 +31,7 @@ List<Map<String, String>> parseFlashcards(String raw) {
   return cards;
 }
 
-class _FlashcardState extends State<Flashcard> {
+class _FlashcardState extends State<FlashcardPage> {
   final controller = TextEditingController();
   List<Map<String, String>> flashcards = [];
   String output = "";

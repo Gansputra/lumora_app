@@ -3,6 +3,68 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
+  /// QNA GENERATOR
+  static Future<String> generateQnA({
+    required String materi,
+    required int jumlahPilihanGanda,
+    required int jumlahIsian,
+  }) async {
+    final prompt =
+        '''Buat soal latihan dari materi berikut:
+  - Pilihan ganda: $jumlahPilihanGanda soal
+  - Isian singkat: $jumlahIsian soal
+  - Bahasa Indonesia
+  - Soal jelas, tidak ambigu
+  - Jangan tambah teks di luar format
+  PILIHAN GANDA:
+  - 4 opsi (A–D), 1 benar
+  - Soal ≤ 20 kata
+  - Opsi ≤ 6 kata
+  - Sertakan jawaban
+  ISIAN SINGKAT:
+  - Soal ≤ 20 kata
+  - Jawaban ≤ 5 kata
+  FORMAT:
+  === PILIHAN GANDA ===
+  1. Soal
+  A. ...
+  B. ...
+  C. ...
+  D. ...
+  Jawaban: X
+  === ISIAN SINGKAT ===
+  1. Soal
+  Jawaban: ...
+  Materi:
+  $materi''';
+    try {
+      final response = await http.post(
+        Uri.parse(_url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {"text": prompt},
+              ],
+            },
+          ],
+        }),
+      );
+      if (response.statusCode != 200) {
+        throw Exception("HTTP Error: " + response.statusCode.toString());
+      }
+      final data = jsonDecode(response.body);
+      if (data["error"] != null) {
+        throw Exception(data["error"]["message"]);
+      }
+      return data["candidates"][0]["content"]["parts"][0]["text"]?.trim() ??
+          "(No content)";
+    } catch (e) {
+      return "⚠️ Error generate QnA: $e";
+    }
+  }
+
   static final _apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
   static String get _url =>
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey";

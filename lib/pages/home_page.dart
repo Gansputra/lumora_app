@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'flashcard_page.dart';
+import 'halaman_flashcard.dart';
 import '../widgets/tool_card.dart';
 import 'summarizer_page.dart';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'halaman_qna.dart';
 
 class HomePage extends StatefulWidget {
   final String? userName;
@@ -31,13 +32,13 @@ class _HomePageState extends State<HomePage> {
         'title': 'Flashcard Generator',
         'desc': 'Ubah materi jadi kartu belajar interaktif',
         'icon': Icons.style_outlined,
-        'page': const Flashcard(),
+        'page': const FlashcardPage(),
       },
       {
         'title': 'Quiz Generator',
-        'desc': 'Buat latihan soal otomatis dari teks',
+        'desc': 'Buat latihan soal otomatis dari materi sekolah',
         'icon': Icons.quiz_outlined,
-        'page': null, // nanti kita isi
+        'page': const QuestionGeneratorPage(),
       },
       {
         'title': 'Explain Mode',
