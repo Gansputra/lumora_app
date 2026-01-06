@@ -8,17 +8,17 @@ import '../services/file_parser.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-class SummarizerPage extends StatefulWidget {
+class halamanRingkas extends StatefulWidget {
   final String? initialText;
   final bool autoRun;
 
-  const SummarizerPage({super.key, this.initialText, this.autoRun = false});
+  const halamanRingkas({super.key, this.initialText, this.autoRun = false});
 
   @override
-  State<SummarizerPage> createState() => _SummarizerPageState();
+  State<halamanRingkas> createState() => _SummarizerPageState();
 }
 
-class _SummarizerPageState extends State<SummarizerPage> {
+class _SummarizerPageState extends State<halamanRingkas> {
   bool _inputTeks = true; // true: input teks, false: upload file
   String? _fileName;
   String? _fileContent;
@@ -38,7 +38,7 @@ class _SummarizerPageState extends State<SummarizerPage> {
       _controller.text = widget.initialText!;
       if (widget.autoRun) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _summarize();
+          _ringkas();
         });
       }
     }
@@ -60,20 +60,7 @@ class _SummarizerPageState extends State<SummarizerPage> {
     super.dispose();
   }
 
-  /*************  ✨ Windsurf Command 🌟  *************/
-  /// Summarizes the given text and update the UI accordingly.
-  ///
-  /// It will first check if the user is logged in and if the
-  /// usage limit for today has been reached. If either of
-  /// these conditions are not met, it will show a SnackBar and
-  /// return early.
-  ///
-  /// If the text is empty, it will also return early.
-  ///
-  /// Otherwise, it will call the GeminiService to summarize the
-  /// text, update the usage count and then update the UI with
-  /// the result.
-  Future<void> _summarize() async {
+  Future<void> _ringkas() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +84,7 @@ class _SummarizerPageState extends State<SummarizerPage> {
     setState(() => _loading = true);
 
     try {
-      final res = await GeminiService.summarizeText(text);
+      final res = await GeminiService.ringkasTeks(text);
       await UsageLimitService.incrementUsage(user.id);
       setState(() {
         _result = res;
@@ -241,7 +228,7 @@ class _SummarizerPageState extends State<SummarizerPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _loading ? null : _summarize,
+                      onPressed: _loading ? null : _ringkas,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blueAccent,
                         padding: const EdgeInsets.symmetric(vertical: 14),

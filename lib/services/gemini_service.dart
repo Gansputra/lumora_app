@@ -69,10 +69,9 @@ class GeminiService {
   static String get _url =>
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey";
 
-  /// SUMMARIZER NORMAL
-  static Future<String> summarizeText(String prompt) async {
+  static Future<String> ringkasTeks(String prompt) async {
     print(
-      '[GeminiService] summarizeText dipanggil dengan prompt: ${prompt.substring(0, prompt.length > 50 ? 50 : prompt.length)}',
+      '[GeminiService] Ringkas Teks dipanggil dengan prompt: ${prompt.substring(0, prompt.length > 50 ? 50 : prompt.length)}',
     );
     try {
       final response = await http.post(

@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'halaman_flashcard.dart';
 import '../widgets/tool_card.dart';
-import 'summarizer_page.dart';
+import 'halaman_ringkasan.dart';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'halaman_qna.dart';
+import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
   final String? userName;
@@ -26,7 +27,7 @@ class _HomePageState extends State<HomePage> {
         'title': 'AI Summarizer',
         'desc': 'Ringkas dokumen panjang jadi singkat & padat',
         'icon': Icons.article_outlined,
-        'page': const SummarizerPage(),
+        'page': const halamanRingkas(),
       },
       {
         'title': 'Flashcard Generator',
@@ -75,6 +76,17 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.white,
                 letterSpacing: 0.8,
               ),
+            ),
+            Spacer(),
+            IconButton(
+              icon: const Icon(Icons.settings, color: Colors.white),
+              tooltip: 'Pengaturan',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
             ),
           ],
         ),

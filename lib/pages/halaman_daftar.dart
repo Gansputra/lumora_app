@@ -33,17 +33,32 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
     final password = _passwordController.text;
     final confirm = _confirmController.text;
 
+    void showPopup(String title, String message, {bool success = false}) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            title,
+            style: TextStyle(color: success ? Colors.green : Colors.red),
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (name.isEmpty || email.isEmpty || password.isEmpty || confirm.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Semua field harus diisi')));
+      showPopup('Error', 'Semua field harus diisi');
       return;
     }
 
     if (password != confirm) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Password tidak cocok')));
+      showPopup('Error', 'Password tidak cocok');
       return;
     }
 
@@ -58,15 +73,23 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
 
       final user = res.user;
       if (user == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Gagal mendaftar')));
+        showPopup('Gagal', 'Gagal mendaftar');
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Pendaftaran berhasil')));
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Berhasil', style: TextStyle(color: Colors.green)),
+          content: const Text('Pendaftaran berhasil'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
 
       // optional: langsung arahkan ke login
       Navigator.pushReplacement(
@@ -74,9 +97,7 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
         MaterialPageRoute(builder: (context) => HalamanMasuk()),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Terjadi error: $e')));
+      showPopup('Error', 'Terjadi error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

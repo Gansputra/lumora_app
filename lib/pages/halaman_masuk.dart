@@ -27,12 +27,27 @@ class _HalamanMasukState extends State<HalamanMasuk> {
     final input = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (input.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email/username dan password harus diisi'),
+    void showPopup(String title, String message, {bool success = false}) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            title,
+            style: TextStyle(color: success ? Colors.green : Colors.red),
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
+    }
+
+    if (input.isEmpty || password.isEmpty) {
+      showPopup('Error', 'Email/username dan password harus diisi');
       return;
     }
 
@@ -52,19 +67,13 @@ class _HalamanMasukState extends State<HalamanMasuk> {
             .limit(1)
             .maybeSingle();
         if (profileRes == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Username tidak ditemukan')),
-          );
+          showPopup('Salah', 'Username tidak ditemukan');
           return;
         }
         email = profileRes['email'] as String?;
         userName = profileRes['username'] as String?;
         if (email == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Email tidak ditemukan untuk username ini'),
-            ),
-          );
+          showPopup('Salah', 'Email tidak ditemukan untuk username ini');
           return;
         }
       }
@@ -76,8 +85,16 @@ class _HalamanMasukState extends State<HalamanMasuk> {
       );
 
       if (authRes.user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email/username atau password salah')),
+        showPopup('Salah', 'Email/username atau password salah');
+        return;
+      }
+
+      // Cek verifikasi email
+      final user = authRes.user;
+      if (user != null && user.emailConfirmedAt == null) {
+        showPopup(
+          'Verifikasi Diperlukan',
+          'Harap verifikasi email anda terlebih dahulu',
         );
         return;
       }
@@ -95,19 +112,39 @@ class _HalamanMasukState extends State<HalamanMasuk> {
             : null;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login berhasil')));
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Berhasil', style: TextStyle(color: Colors.green)),
+          content: const Text('Login berhasil'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => HomePage(userName: userName ?? email!),
         ),
       );
+    } on AuthException catch (e) {
+      if (e.message != null &&
+          (e.message!.contains('email not confirmed') ||
+              e.message!.contains('Email not confirmed') ||
+              e.message!.contains('email_not_confirmed'))) {
+        showPopup(
+          'Verifikasi Diperlukan',
+          'Harap verifikasi email anda terlebih dahulu',
+        );
+      } else {
+        showPopup('Error', 'Terjadi error: ${e.message}');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Terjadi error: $e')));
+      showPopup('Error', 'Terjadi error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
