@@ -76,31 +76,46 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
       );
 
       final user = res.user;
+      final emailVerified = res.user?.emailConfirmedAt != null;
+
       if (user == null) {
         showPopup('Gagal', 'Gagal mendaftar');
         return;
       }
 
-      // 2️⃣ Ambil userId terbesar dari profiles
-      final lastProfile = await Supabase.instance.client
-          .from('profiles')
-          .select('userId')
-          .order('userId', ascending: false)
-          .limit(1)
-          .maybeSingle();
+      if (!emailVerified) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text(
+              'Verifikasi Email',
+              style: TextStyle(color: Colors.orange),
+            ),
+            content: const Text(
+              'Pendaftaran berhasil!\n\nSilakan cek email Anda dan lakukan verifikasi sebelum login.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
 
-      int lastNum = 0;
-      if (lastProfile != null && lastProfile['userId'] != null) {
-        lastNum = int.tryParse(lastProfile['userId'].toString()) ?? 0;
+        // Arahkan ke halaman login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HalamanMasuk()),
+        );
+        return;
       }
-      String nextUserId = (lastNum + 1).toString().padLeft(3, '0');
 
-      // 3️⃣ Insert ke tabel profiles
+      // 3️⃣ Insert ke tabel profiles (tanpa userId, biar auto increment)
       await Supabase.instance.client.from('profiles').insert({
         'id': user.id,
         'username': name,
         'email': email,
-        'userId': nextUserId,
         'created_at': DateTime.now().toIso8601String(),
       });
 

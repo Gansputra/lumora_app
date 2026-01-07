@@ -114,6 +114,23 @@ class _HalamanMasukState extends State<HalamanMasuk> {
             : null;
       }
 
+      // Cek apakah profile user sudah ada (berdasarkan id)
+      final profileCheck = await Supabase.instance.client
+          .from('profiles')
+          .select('id')
+          .eq('id', user!.id)
+          .maybeSingle();
+
+      if (profileCheck == null) {
+        // Insert ke profiles (tanpa userId, biar auto increment)
+        await Supabase.instance.client.from('profiles').insert({
+          'id': user.id,
+          'username': userName ?? '',
+          'email': email,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(

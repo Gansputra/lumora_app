@@ -64,9 +64,29 @@ class _SettingsPageState extends State<SettingsPage> {
           ? DateTime.parse(profile['created_at'])
           : null;
       _usernameController.text = username ?? '';
-      userId = profile != null ? profile['userId'] : null;
+      userId = profile != null ? profile['userId']?.toString() : null;
       isLoading = false;
     });
+    if (profile == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text(
+              'Profil Tidak Ditemukan',
+              style: TextStyle(color: Colors.red),
+            ),
+            content: const Text('Data profil tidak ditemukan di database.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
   }
 
   Future<void> updateUsername() async {
