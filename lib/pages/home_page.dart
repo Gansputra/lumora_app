@@ -82,10 +82,7 @@ class _HomePageState extends State<HomePage> {
               icon: const Icon(Icons.settings, color: Colors.white),
               tooltip: 'Pengaturan',
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
+                navigateToSettingsPage(context);
               },
             ),
           ],

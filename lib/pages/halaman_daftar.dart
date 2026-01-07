@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:lumora_app/pages/halaman_masuk.dart';
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:flutter/gestures.dart';
@@ -12,6 +14,8 @@ class HalamanDaftar extends StatefulWidget {
 }
 
 class _HalamanDaftarState extends State<HalamanDaftar> {
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -76,6 +80,29 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
         showPopup('Gagal', 'Gagal mendaftar');
         return;
       }
+
+      // 2️⃣ Ambil userId terbesar dari profiles
+      final lastProfile = await Supabase.instance.client
+          .from('profiles')
+          .select('userId')
+          .order('userId', ascending: false)
+          .limit(1)
+          .maybeSingle();
+
+      int lastNum = 0;
+      if (lastProfile != null && lastProfile['userId'] != null) {
+        lastNum = int.tryParse(lastProfile['userId'].toString()) ?? 0;
+      }
+      String nextUserId = (lastNum + 1).toString().padLeft(3, '0');
+
+      // 3️⃣ Insert ke tabel profiles
+      await Supabase.instance.client.from('profiles').insert({
+        'id': user.id,
+        'username': name,
+        'email': email,
+        'userId': nextUserId,
+        'created_at': DateTime.now().toIso8601String(),
+      });
 
       await showDialog(
         context: context,
@@ -232,14 +259,40 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                       controller: _passwordController,
                       icon: Icons.lock,
                       hintText: 'Password',
-                      obscureText: true,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.white70,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
                       controller: _confirmController,
                       icon: Icons.verified_user,
                       hintText: 'Confirm Password',
-                      obscureText: true,
+                      obscureText: _obscureConfirm,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.white70,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirm = !_obscureConfirm;
+                          });
+                        },
+                      ),
                     ),
 
                     const SizedBox(height: 75),
@@ -341,37 +394,39 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
   }
 
   Widget _buildTextField({
-    TextEditingController? controller,
+    required TextEditingController controller,
     required IconData icon,
     required String hintText,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
+    Widget? suffixIcon,
   }) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF5F7FCE), Color(0xFF2050B4)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          prefixIcon: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Icon(icon, color: Colors.black),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.25)),
           ),
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.normal,
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: Colors.white70),
+              hintText: hintText,
+              hintStyle: const TextStyle(color: Colors.white54),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 18,
+                horizontal: 16,
+              ),
+              suffixIcon: suffixIcon,
+            ),
           ),
         ),
       ),

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:lumora_app/pages/halaman_daftar.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +17,7 @@ class _HalamanMasukState extends State<HalamanMasuk> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-
+  bool _obscurePassword = true;
   @override
   void dispose() {
     _emailController.dispose();
@@ -153,7 +155,7 @@ class _HalamanMasukState extends State<HalamanMasuk> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -169,33 +171,22 @@ class _HalamanMasukState extends State<HalamanMasuk> {
         child: SafeArea(
           child: Stack(
             children: [
+              // HEADER IMAGE
               Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
                 height: 160,
-                child: Container(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(40),
-                        bottomRight: Radius.circular(40),
-                      ),
-                      child: Container(
-                        height: 1000,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: AssetImage('assets/images/daun.png'),
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                              Colors.blue.shade700.withOpacity(0.6),
-                              BlendMode.srcATop,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
+                  child: Image.asset(
+                    'assets/images/daun.png',
+                    fit: BoxFit.cover,
+                    color: Colors.blue.shade700.withOpacity(0.6),
+                    colorBlendMode: BlendMode.srcATop,
                   ),
                 ),
               ),
@@ -206,74 +197,75 @@ class _HalamanMasukState extends State<HalamanMasuk> {
                   vertical: 90,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // BACK BUTTON
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HalamanUtama(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Color(0xFF2D90E5),
-                            shape: BoxShape.circle,
-                          ),
-                          padding: EdgeInsets.all(10),
-                          child: Icon(
+                      child: CircleAvatar(
+                        backgroundColor: const Color(0xFF2D90E5),
+                        child: IconButton(
+                          icon: const Icon(
                             Icons.arrow_back_ios_new,
                             color: Colors.white,
                             size: 20,
                           ),
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+
+                    const SizedBox(height: 14),
+
                     const Text(
                       'Masuk ke akun',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 36,
+                        fontSize: 34,
                         fontWeight: FontWeight.bold,
                       ),
-                      textAlign: TextAlign.center,
                     ),
 
                     const SizedBox(height: 6),
 
                     const Text(
                       'Selamat datang kembali!',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+
+                    const SizedBox(height: 120),
+
+                    // ===== MODERN INPUT =====
+                    _modernTextField(
+                      controller: _emailController,
+                      hint: 'E-mail atau Username',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    _modernTextField(
+                      controller: _passwordController,
+                      hint: 'Password',
+                      icon: Icons.lock_outline,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.white70,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
                     ),
 
-                    const SizedBox(height: 200),
+                    const SizedBox(height: 22),
 
-                    // Input Fields
-                    _buildTextField(
-                      controller: _emailController,
-                      icon: Icons.email_outlined,
-                      hintText: 'E-mail atau Username',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      controller: _passwordController,
-                      icon: Icons.lock,
-                      hintText: 'Password',
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Belum punya akun? Daftar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -286,7 +278,7 @@ class _HalamanMasukState extends State<HalamanMasuk> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => HalamanDaftar(),
+                                builder: (context) => const HalamanDaftar(),
                               ),
                             );
                           },
@@ -294,51 +286,47 @@ class _HalamanMasukState extends State<HalamanMasuk> {
                             'Daftar',
                             style: TextStyle(
                               color: Colors.white,
-                              decoration: TextDecoration.underline,
                               fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                    // Masuk button
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : () => _login(context),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 120,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          backgroundColor: Color(0xFF2050B4),
+                    // BUTTON
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : () => _login(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2050B4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 120,
+                          vertical: 16,
                         ),
-                        child: _isLoading
-                            ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(
-                                'Masuk',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(40),
+                        ),
                       ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Masuk',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
-
-                    const SizedBox(height: 14),
                   ],
                 ),
               ),
@@ -349,38 +337,40 @@ class _HalamanMasukState extends State<HalamanMasuk> {
     );
   }
 
-  Widget _buildTextField({
-    TextEditingController? controller,
+  Widget _modernTextField({
+    required TextEditingController controller,
+    required String hint,
     required IconData icon,
-    required String hintText,
-    bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
+    Widget? suffixIcon,
   }) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF5F7FCE), Color(0xFF2050B4)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          prefixIcon: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child: Icon(icon, color: Colors.black),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withOpacity(0.25)),
           ),
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.normal,
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: Colors.white70),
+              suffixIcon: suffixIcon,
+              hintText: hint,
+              hintStyle: const TextStyle(color: Colors.white54),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 18,
+                horizontal: 16,
+              ),
+            ),
           ),
         ),
       ),
