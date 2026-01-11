@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:lumora_app/main.dart';
 import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:lumora_app/pages/halaman_daftar.dart';
 import 'package:flutter/material.dart';
@@ -30,21 +31,78 @@ class _HalamanMasukState extends State<HalamanMasuk> {
     final password = _passwordController.text;
 
     void showPopup(String title, String message, {bool success = false}) {
-      showDialog(
+      final context = navigatorKey.currentContext!;
+
+      showGeneralDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            title,
-            style: TextStyle(color: success ? Colors.green : Colors.red),
-          ),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+        barrierDismissible: true,
+        barrierLabel: "Popup",
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (context, anim1, anim2) {
+          return Center(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: LinearGradient(
+                    colors: success
+                        ? [Color(0xFF43CEA2), Color(0xFF185A9D)]
+                        : [Color(0xFFFF512F), Color(0xFFDD2476)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 20,
+                      offset: Offset(0, 10),
+                      color: Colors.black26,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      success
+                          ? Icons.check_circle_rounded
+                          : Icons.error_rounded,
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => navigatorKey.currentState!.pop(),
+                      child: const Text("OK"),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          );
+        },
+        transitionBuilder: (context, anim1, anim2, child) {
+          return Transform.scale(
+            scale: Curves.easeOutBack.transform(anim1.value),
+            child: Opacity(opacity: anim1.value, child: child),
+          );
+        },
       );
     }
 
@@ -130,20 +188,10 @@ class _HalamanMasukState extends State<HalamanMasuk> {
           'created_at': DateTime.now().toIso8601String(),
         });
       }
+      showPopup('Berhasil', 'Login berhasil', success: true);
 
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Berhasil', style: TextStyle(color: Colors.green)),
-          content: const Text('Login berhasil'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      await Future.delayed(const Duration(seconds: 2));
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -151,10 +199,9 @@ class _HalamanMasukState extends State<HalamanMasuk> {
         ),
       );
     } on AuthException catch (e) {
+      print('AuthException: ${e.message}');
       if (e.message != null &&
-          (e.message!.contains('email not confirmed') ||
-              e.message!.contains('Email not confirmed') ||
-              e.message!.contains('email_not_confirmed'))) {
+          e.message!.toLowerCase().contains('email not confirmed')) {
         showPopup(
           'Verifikasi Diperlukan',
           'Harap verifikasi email anda terlebih dahulu',
