@@ -1,13 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lumora_app/pages/halaman_penjelasan.dart';
 import 'halaman_flashcard.dart';
 import '../widgets/tool_card.dart';
 import 'halaman_ringkasan.dart';
 import 'dart:ui';
-import 'package:file_picker/file_picker.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'halaman_qna.dart';
 import 'settings_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
   final String? userName;
@@ -18,7 +17,34 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // PDF upload & extracted text logic dihapus, tools bisa langsung digunakan
+  String? _photoUrl;
+  bool _profileLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfilePhoto();
+  }
+
+  Future<void> _fetchProfilePhoto() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      setState(() {
+        _photoUrl = null;
+        _profileLoading = false;
+      });
+      return;
+    }
+    final profile = await Supabase.instance.client
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+    setState(() {
+      _photoUrl = profile != null ? profile['avatar_url'] as String? : null;
+      _profileLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +53,7 @@ class _HomePageState extends State<HomePage> {
         'title': 'AI Summarizer',
         'desc': 'Ringkas dokumen panjang jadi singkat & padat',
         'icon': Icons.article_outlined,
-        'page': const halamanRingkas(),
+        'page': const HalamanRingkas(),
       },
       {
         'title': 'Flashcard Generator',
@@ -45,7 +71,7 @@ class _HomePageState extends State<HomePage> {
         'title': 'Explain Mode',
         'desc': 'Tanya konsep & penjelasan dari AI',
         'icon': Icons.psychology_alt_outlined,
-        'page': null, // nanti juga
+        'page': ExplainPage(),
       },
     ];
 
@@ -66,8 +92,6 @@ class _HomePageState extends State<HomePage> {
         ),
         title: Row(
           children: [
-            Image.asset('assets/images/logo_lumora.png', height: 28),
-            const SizedBox(width: 10),
             const Text(
               'Lumora',
               style: TextStyle(
@@ -106,6 +130,40 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            if (_profileLoading)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: CircleAvatar(
+                  radius: 38,
+                  backgroundColor: Colors.white24,
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              )
+            else if (_photoUrl != null && _photoUrl!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: CircleAvatar(
+                  radius: 38,
+                  backgroundColor: Colors.white,
+                  backgroundImage: NetworkImage(_photoUrl!),
+                ),
+              )
+            else
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: CircleAvatar(
+                  radius: 38,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person, size: 38, color: Colors.white54),
+                ),
+              ),
             Text(
               displayName != null
                   ? 'Selamat datang, $displayName'
@@ -121,7 +179,6 @@ class _HomePageState extends State<HomePage> {
               "Pilih tools yang mau kamu pakai hari ini:",
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
-            // ListView vertikal untuk ToolCard
             const SizedBox(height: 16),
             Expanded(
               child: ListView.separated(

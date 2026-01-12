@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lumora_app/pages/halaman_utama.dart';
@@ -88,7 +86,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Fungsi untuk memilih file gambar (pakai image_picker)
   Future<String?> _pickAndUploadAvatar(String userId) async {
     try {
       final picker = ImagePicker();
@@ -122,7 +119,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // Fungsi untuk hapus avatar dari storage dan DB
   Future<void> _deleteAvatar(String? avatarUrl, String userId) async {
     try {
       if (avatarUrl != null && avatarUrl.isNotEmpty) {
@@ -295,12 +291,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final newUsername = _usernameController.text.trim();
     if (newUsername.isEmpty) return;
 
-    // Cek apakah username sudah ada di Supabase
     final existing = await Supabase.instance.client
         .from('profiles')
         .select('id')
         .eq('username', newUsername)
-        .neq('id', user.id) // pastikan bukan user sendiri
+        .neq('id', user.id)
         .maybeSingle();
 
     if (existing != null) {
@@ -351,7 +346,6 @@ class _SettingsPageState extends State<SettingsPage> {
       return;
     }
     try {
-      // Cek password lama dengan login ulang
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) return;
       final email = user.email;
@@ -416,8 +410,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 16),
-
-                  // ===== CARD PROFILE =====
                   _card(
                     child: Row(
                       children: [
@@ -487,7 +479,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   const SizedBox(height: 16),
 
-                  // ===== INFORMASI AKUN =====
                   _card(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +501,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   const SizedBox(height: 16),
 
-                  // ===== AKSI =====
                   _card(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,7 +646,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
     );
   }
-  // ===== WIDGET HELPER =====
 
   static Widget _card({required Widget child}) {
     return Container(
@@ -717,7 +706,6 @@ void main() {
   runApp(const MyApp());
 }
 
-/// Helper function to navigate to SettingsPage with slide transition
 void navigateToSettingsPage(BuildContext context) {
   Navigator.of(context).push(
     PageRouteBuilder(
@@ -776,7 +764,6 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // ===== CARD PROFILE =====
             _card(
               child: Row(
                 children: [
@@ -824,7 +811,6 @@ class ProfilePage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ===== INFORMASI AKUN =====
             _card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -844,7 +830,6 @@ class ProfilePage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ===== AKSI =====
             _card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

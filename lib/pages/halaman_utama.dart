@@ -25,7 +25,7 @@ class HalamanUtama extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  height: 300, // ukuran pasti yang lebih besar
+                  height: 300,
                   child: Image.asset(
                     'assets/images/3d_lowpoly(1).png',
                     fit: BoxFit.contain,

@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
-  /// QNA GENERATOR
   static Future<String> generateQnA({
     required String materi,
     required int jumlahPilihanGanda,
@@ -115,7 +114,6 @@ Teks: $prompt
     }
   }
 
-  /// SUMMARIZER Markdown
   static Future<String> summarizeMarkdown(String prompt) async {
     print(
       '[GeminiService] summarizeMarkdown dipanggil dengan prompt: ${prompt.substring(0, prompt.length > 50 ? 50 : prompt.length)}',
@@ -168,7 +166,6 @@ $prompt
     }
   }
 
-  /// FLASHCARD GENERATOR
   static Future<String> generateFlashcard(String prompt) async {
     print(
       '[GeminiService] generateFlashcard dipanggil dengan prompt: ${prompt.substring(0, prompt.length > 50 ? 50 : prompt.length)}',
@@ -185,7 +182,6 @@ $prompt
                   "text":
                       """
 Kamu akan membuat flashcard dari teks berikut.
-
 Langkah:
 1. Ringkas teks jadi poin penting
 2. Buat flashcard Q&A
@@ -215,5 +211,85 @@ $prompt
     } catch (e) {
       return "⚠️ Error: $e";
     }
+  }
+
+  static Future<String> jelaskanAwal(String topik) async {
+    try {
+      final response = await http.post(
+        Uri.parse(_url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text":
+                      """
+Halo! 👋  
+Sebagai tutor LUMORA, jelaskan $topik secara singkat dan santai.  
+Gunakan analogi sederhana & emoji secukupnya, pakai format Markdown.  
+Akhiri dengan satu pertanyaan untuk lanjut diskusi.""",
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      return "⚠️ Gagal memulai penjelasan: $e";
+    }
+  }
+
+  static Future<String> tanyaMateri({
+    required String materi,
+    required String pertanyaan,
+  }) async {
+    print('[GeminiService] Tanya Materi dipanggil');
+    try {
+      final response = await http.post(
+        Uri.parse(_url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "contents": [
+            {
+              "parts": [
+                {
+                  "text":
+                      """
+Kamu adalah tutor LUMORA yang cerdas.
+
+Materi utama:
+$materi
+
+Pertanyaan:
+$pertanyaan
+
+Jawab pertanyaan dengan bahasa ramah dan mudah dipahami.
+Utamakan materi utama, tapi boleh pakai pengetahuan umum tambahan jika perlu (beri catatan singkat).
+Gunakan format Markdown yang rapi.
+""",
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      return "⚠️ Gagal mengirim pesan: $e";
+    }
+  }
+
+  static String _handleResponse(http.Response response) {
+    if (response.statusCode == 429) {
+      return "⚠️ Terlalu banyak permintaan (Rate Limit). Tunggu sebentar ya, bro.";
+    }
+    if (response.statusCode != 200) {
+      return "⚠️ Terjadi kesalahan server (Error ${response.statusCode})";
+    }
+    final data = jsonDecode(response.body);
+    return data["candidates"][0]["content"]["parts"][0]["text"]?.trim() ??
+        "(No content)";
   }
 }

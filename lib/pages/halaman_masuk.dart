@@ -1,7 +1,5 @@
 import 'dart:ui';
-
 import 'package:lumora_app/main.dart';
-import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:lumora_app/pages/halaman_daftar.dart';
 import 'package:flutter/material.dart';
 import 'package:lumora_app/pages/home_page.dart';
@@ -115,11 +113,9 @@ class _HalamanMasukState extends State<HalamanMasuk> {
     try {
       String? email;
       String? userName;
-      // Jika input mengandung '@', anggap sebagai email
       if (input.contains('@')) {
         email = input;
       } else {
-        // Cari email berdasarkan username di tabel profiles
         final profileRes = await Supabase.instance.client
             .from('profiles')
             .select('id, username, email')
@@ -158,10 +154,7 @@ class _HalamanMasukState extends State<HalamanMasuk> {
         );
         return;
       }
-
-      // Ambil username jika login pakai email
       if (userName == null) {
-        // Cari username di profiles
         final profileRes = await Supabase.instance.client
             .from('profiles')
             .select('username')
@@ -171,8 +164,6 @@ class _HalamanMasukState extends State<HalamanMasuk> {
             ? profileRes['username'] as String?
             : null;
       }
-
-      // Cek apakah profile user sudah ada (berdasarkan id)
       final profileCheck = await Supabase.instance.client
           .from('profiles')
           .select('id')
@@ -180,7 +171,6 @@ class _HalamanMasukState extends State<HalamanMasuk> {
           .maybeSingle();
 
       if (profileCheck == null) {
-        // Insert ke profiles (tanpa userId, biar auto increment)
         await Supabase.instance.client.from('profiles').insert({
           'id': user.id,
           'username': userName ?? '',
@@ -190,7 +180,7 @@ class _HalamanMasukState extends State<HalamanMasuk> {
       }
       showPopup('Berhasil', 'Login berhasil', success: true);
 
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 1));
 
       Navigator.pushReplacement(
         context,
@@ -235,7 +225,6 @@ class _HalamanMasukState extends State<HalamanMasuk> {
         child: SafeArea(
           child: Stack(
             children: [
-              // HEADER IMAGE
               Positioned(
                 top: 0,
                 left: 0,
@@ -262,7 +251,6 @@ class _HalamanMasukState extends State<HalamanMasuk> {
                 ),
                 child: Column(
                   children: [
-                    // BACK BUTTON
                     Align(
                       alignment: Alignment.centerLeft,
                       child: CircleAvatar(
@@ -298,7 +286,6 @@ class _HalamanMasukState extends State<HalamanMasuk> {
 
                     const SizedBox(height: 120),
 
-                    // ===== MODERN INPUT =====
                     _modernTextField(
                       controller: _emailController,
                       hint: 'E-mail atau Username',
@@ -360,7 +347,6 @@ class _HalamanMasukState extends State<HalamanMasuk> {
 
                     const SizedBox(height: 16),
 
-                    // BUTTON
                     ElevatedButton(
                       onPressed: _isLoading ? null : () => _login(context),
                       style: ElevatedButton.styleFrom(

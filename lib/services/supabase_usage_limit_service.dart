@@ -3,8 +3,6 @@ import 'package:intl/intl.dart';
 
 class UsageLimitService {
   static final _client = Supabase.instance.client;
-
-  /// Returns the current usage count for the user for today
   static Future<int> getTodayUsageCount(String userId) async {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final res = await _client
@@ -17,7 +15,6 @@ class UsageLimitService {
     return res['generate_count'] ?? 0;
   }
 
-  /// Increments the usage count for the user for today
   static Future<void> incrementUsage(String userId) async {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final existing = await _client

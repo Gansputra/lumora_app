@@ -69,7 +69,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
     setState(() => _isLoading = true);
 
     try {
-      // 1️⃣ Signup ke Supabase Auth
       final res = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
@@ -103,7 +102,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
           ),
         );
 
-        // Arahkan ke halaman login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HalamanMasuk()),
@@ -111,7 +109,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
         return;
       }
 
-      // 3️⃣ Insert ke tabel profiles (tanpa userId, biar auto increment)
       await Supabase.instance.client.from('profiles').insert({
         'id': user.id,
         'username': name,
@@ -133,7 +130,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
         ),
       );
 
-      // optional: langsung arahkan ke login
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HalamanMasuk()),
@@ -312,7 +308,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
 
                     const SizedBox(height: 75),
 
-                    // Privacy Policy text
                     Center(
                       child: RichText(
                         text: TextSpan(
@@ -325,7 +320,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
                                 color: Colors.blue[300],
                                 decoration: TextDecoration.underline,
                               ),
-                              // Add gesture recognizer if needed for link
                             ),
                           ],
                         ),
@@ -334,7 +328,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
 
                     const SizedBox(height: 26),
 
-                    // Daftar button
                     Center(
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : () => _register(context),
@@ -371,7 +364,6 @@ class _HalamanDaftarState extends State<HalamanDaftar> {
 
                     const SizedBox(height: 14),
 
-                    // Already have account
                     Center(
                       child: RichText(
                         text: TextSpan(

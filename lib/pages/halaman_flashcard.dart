@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/gemini_service.dart';
 import 'package:flip_card/flip_card.dart';
+import '../services/gemini_service.dart';
 import 'package:lumora_app/widgets/animated_dots_loader.dart';
 
 class FlashcardPage extends StatefulWidget {
@@ -61,7 +61,6 @@ class _FlashcardState extends State<FlashcardPage> {
 
   void _nextCard() {
     if (currentIndex < flashcards.length - 1) {
-      // Reset flip card to front (question) before changing card
       if (_flipCardKey.currentState?.isFront == false) {
         _flipCardKey.currentState?.toggleCard();
       }
@@ -73,7 +72,6 @@ class _FlashcardState extends State<FlashcardPage> {
 
   void _prevCard() {
     if (currentIndex > 0) {
-      // Reset flip card to front (question) before changing card
       if (_flipCardKey.currentState?.isFront == false) {
         _flipCardKey.currentState?.toggleCard();
       }
@@ -109,177 +107,279 @@ class _FlashcardState extends State<FlashcardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("AI Flashcard Generator")),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
+      backgroundColor: const Color(0xFFF0F2F5),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1E3C72), Color(0xFF2A5298)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            centerTitle: true,
+            foregroundColor: Colors.white,
+            title: const Text(
+              "Lumora",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+            ),
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 📝 Tempat buat ngetik materi / prompt
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Masukkan materi di sini...",
+            const Text(
+              'Flashcard Generator',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A237E),
               ),
-              maxLines: 3,
             ),
             const SizedBox(height: 8),
-
-            // 🔘 Tombol Generate
-            ElevatedButton(
-              onPressed: isLoading ? null : generate,
-              child: isLoading
-                  ? const AnimatedDotsLoader(text: "Sedang Mengerjakan")
-                  : const Text("Generate Flashcard"),
+            const Text(
+              'Ubah materi sulit menjadi kartu belajar interaktif.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 25),
 
-            // 📄 Flashcard Display - Single Card with Navigation
-            Expanded(
-              child: flashcards.isEmpty
-                  ? SingleChildScrollView(
-                      child: Text(
-                        output.isEmpty
-                            ? "Belum ada flashcard. Masukkan materi dulu!"
-                            : output,
+            // --- Input Section ---
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E3A8A),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: controller,
+                    maxLines: 4,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: "Masukkan materi atau topik di sini...",
+                      hintStyle: TextStyle(
+                        color: Colors.white.withOpacity(0.4),
                       ),
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Card Counter
-                        Text(
-                          'Kartu ${currentIndex + 1} dari ${flashcards.length}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Single Large FlipCard
-                        Expanded(
-                          child: FlipCard(
-                            key: _flipCardKey,
-                            direction: FlipDirection.HORIZONTAL,
-                            front: Card(
-                              color: Colors.blue.shade50,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'PERTANYAAN',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        child: Text(
-                                          flashcards[currentIndex]['question']!,
-                                          style: const TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    const Text(
-                                      'Tap untuk lihat jawaban',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            back: Card(
-                              color: Colors.green.shade50,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.all(24),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'JAWABAN',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        child: Text(
-                                          flashcards[currentIndex]['answer']!,
-                                          style: const TextStyle(fontSize: 18),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    const Text(
-                                      'Tap untuk lihat pertanyaan',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Navigation Buttons
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: currentIndex > 0 ? _prevCard : null,
-                              icon: const Icon(Icons.arrow_back),
-                              label: const Text('Sebelumnya'),
-                            ),
-                            const SizedBox(width: 16),
-                            ElevatedButton.icon(
-                              onPressed: currentIndex < flashcards.length - 1
-                                  ? _nextCard
-                                  : null,
-                              icon: const Icon(Icons.arrow_forward),
-                              label: const Text('Selanjutnya'),
-                            ),
-                          ],
-                        ),
-                      ],
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.08),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+                        ),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : generate,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const AnimatedDotsLoader(
+                                text: "Sedang Mengerjakan",
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                "Generate Flashcard",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+
+            const SizedBox(height: 30),
+
+            // --- Flashcard Result ---
+            if (flashcards.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(40),
+                child: Text(
+                  output.isEmpty
+                      ? "Belum ada flashcard. Ayo buat sekarang!"
+                      : output,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else
+              Column(
+                children: [
+                  Text(
+                    'Kartu ${currentIndex + 1} dari ${flashcards.length}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // The Interactive Flip Card
+                  SizedBox(
+                    height: 300,
+                    width: double.infinity,
+                    child: FlipCard(
+                      key: _flipCardKey,
+                      direction: FlipDirection.HORIZONTAL,
+                      front: _buildCardSide(
+                        title: "PERTANYAAN",
+                        content: flashcards[currentIndex]['question']!,
+                        color: Colors.white,
+                        textColor: const Color(0xFF1E3A8A),
+                        subText: "Tap untuk lihat jawaban",
+                      ),
+                      back: _buildCardSide(
+                        title: "JAWABAN",
+                        content: flashcards[currentIndex]['answer']!,
+                        color: const Color(0xFFE3F2FD),
+                        textColor: Colors.blue.shade900,
+                        subText: "Tap untuk kembali ke pertanyaan",
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Navigation Controls
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavButton(
+                        onPressed: currentIndex > 0 ? _prevCard : null,
+                        icon: Icons.chevron_left,
+                        label: "Prev",
+                      ),
+                      _buildNavButton(
+                        onPressed: currentIndex < flashcards.length - 1
+                            ? _nextCard
+                            : null,
+                        icon: Icons.chevron_right,
+                        label: "Next",
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 50),
+                ],
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCardSide({
+    required String title,
+    required String content,
+    required Color color,
+    required Color textColor,
+    required String subText,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        border: Border.all(color: Colors.blue.withOpacity(0.1), width: 2),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.blue.withOpacity(0.5),
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+          const Spacer(),
+          SingleChildScrollView(
+            child: Text(
+              content,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+          ),
+          const Spacer(),
+          Text(
+            subText,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavButton({
+    required VoidCallback? onPressed,
+    required IconData icon,
+    required String label,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1E3A8A),
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 2,
       ),
     );
   }

@@ -30,7 +30,6 @@ class ToolCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Icon kiri
               Container(
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.12),
@@ -40,7 +39,6 @@ class ToolCard extends StatelessWidget {
                 child: Icon(icon, size: 32, color: Colors.blueAccent),
               ),
               const SizedBox(width: 18),
-              // Judul & deskripsi
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +67,6 @@ class ToolCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Panah kanan
               const SizedBox(width: 10),
               Icon(
                 Icons.arrow_forward_ios_rounded,
