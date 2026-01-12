@@ -117,9 +117,30 @@ class _SummarizerPageState extends State<HalamanRingkas> {
             elevation: 0,
             centerTitle: true,
             foregroundColor: Colors.white,
-            title: const Text(
-              "Lumora",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+            title: Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(
+                    text: "Lumora ",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 25,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  TextSpan(
+                    text: "✨ Gemini",
+                    style: TextStyle(
+                      fontWeight: FontWeight
+                          .w300, // Dibuat lebih tipis biar Lumora tetap dominan
+                      fontSize:
+                          25, // Ukurannya agak dikecilin dikit biar proporsional
+                      color: Colors
+                          .blue[200], // Kasih warna biru muda biar vibenya AI banget
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -257,7 +278,10 @@ class _SummarizerPageState extends State<HalamanRingkas> {
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+                                colors: [
+                                  Color.fromARGB(255, 55, 71, 214),
+                                  Color.fromARGB(255, 4, 92, 192),
+                                ],
                               ),
                               borderRadius: BorderRadius.circular(30),
                             ),

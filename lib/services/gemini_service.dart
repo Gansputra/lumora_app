@@ -3,6 +3,9 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
+  static final _apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
+  static String get _url =>
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey";
   static Future<String> generateQnA({
     required String materi,
     required int jumlahPilihanGanda,
@@ -63,10 +66,6 @@ class GeminiService {
       return "⚠️ Error generate QnA: $e";
     }
   }
-
-  static final _apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
-  static String get _url =>
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$_apiKey";
 
   static Future<String> ringkasTeks(String prompt) async {
     print(

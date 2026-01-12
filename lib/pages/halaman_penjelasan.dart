@@ -87,24 +87,10 @@ class _ExplainPageState extends State<ExplainPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
       appBar: AppBar(
-        title: Text(
-          _isChatMode ? _contextMateri : "LUMORA Tutor",
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          overflow: TextOverflow.ellipsis,
-        ),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF1E3C72), Color(0xFF2A5298)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
+        backgroundColor:
+            Colors.transparent, // Agar gradient di flexibleSpace terlihat
+        elevation: 0,
         leading: _isChatMode
             ? IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -114,6 +100,39 @@ class _ExplainPageState extends State<ExplainPage> {
                 }),
               )
             : null,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _isChatMode ? _contextMateri : "LUMORA Tutor",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18, // Ukuran sedikit disesuaikan
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            // --- SUBTITLE BRANDING ---
+            Text(
+              "✨ Gemini AI",
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w300,
+                color: Colors.white.withOpacity(0.8),
+                letterSpacing: 1.2,
+              ),
+            ),
+          ],
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1E3C72), Color(0xFF2A5298)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 500),
@@ -232,7 +251,10 @@ class _ExplainPageState extends State<ExplainPage> {
       child: Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF4FACFE), Color(0xFF00F2FE)],
+            colors: [
+              Color.fromARGB(255, 55, 71, 214),
+              Color.fromARGB(255, 4, 92, 192),
+            ],
           ),
           borderRadius: BorderRadius.circular(30),
         ),

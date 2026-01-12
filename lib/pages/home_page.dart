@@ -210,6 +210,18 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                'Powered By Gemini',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
           ],
         ),
       ),
