@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lumora_app/pages/halaman_ringkasan.dart';
+import 'package:lumora_app/pages/halaman_utama.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lumora_app/pages/halaman_masuk.dart';
 
@@ -40,9 +40,10 @@ class MyApp extends StatelessWidget {
         ),
 
         textTheme: GoogleFonts.plusJakartaSansTextTheme(
-          Theme.of(context).textTheme,
+          Theme.of(context).textTheme.apply(
+            fontFamilyFallback: const ['Roboto', 'Arial', 'sans-serif'],
+          ),
         ),
-
         appBarTheme: AppBarTheme(
           centerTitle: true,
           titleTextStyle: GoogleFonts.plusJakartaSans(
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const HalamanMasuk(),
+      home: const HalamanUtama(),
     );
   }
 }

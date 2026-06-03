@@ -168,16 +168,24 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.of(context).pop();
                       final url = await _pickAndUploadAvatar(user.id);
                       if (url != null) {
-                        await Supabase.instance.client
-                            .from('profiles')
-                            .update({'avatar_url': url})
-                            .eq('id', user.id);
-                        await fetchUserData();
-                        showPopup(
-                          'Berhasil',
-                          'Foto profil berhasil diganti',
-                          success: true,
-                        );
+                        try {
+                          await Supabase.instance.client
+                              .from('profiles')
+                              .update({'avatar_url': url})
+                              .eq('id', user.id);
+                          await fetchUserData();
+                          showPopup(
+                            'Berhasil',
+                            'Foto profil berhasil diganti',
+                            success: true,
+                          );
+                        } catch (e) {
+                          print('Gagal update avatar_url di tabel profiles: $e');
+                          showPopup(
+                            'Error',
+                            'Gagal menyimpan foto ke database. Pastikan kolom avatar_url sudah ada di tabel profiles Supabase Anda.',
+                          );
+                        }
                       }
                     },
                     icon: const Icon(Icons.image),
@@ -231,55 +239,83 @@ class _SettingsPageState extends State<SettingsPage> {
       TextEditingController();
 
   @override
-  @override
   void initState() {
     super.initState();
     initializeDateFormatting('id_ID', null).then((_) {
+      fetchUserData();
+    }).catchError((error) {
+      print('Error initializing date formatting: $error');
       fetchUserData();
     });
   }
 
   Future<void> fetchUserData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      
+      Map<String, dynamic>? profile;
+      try {
+        profile = await Supabase.instance.client
+            .from('profiles')
+            .select('username, created_at, userId, avatar_url')
+            .eq('id', user.id)
+            .maybeSingle();
+      } catch (e) {
+        print('Failed to load profile with userId and avatar_url, trying fallback... error: $e');
+        // Fallback: query only columns we are sure exist
+        profile = await Supabase.instance.client
+            .from('profiles')
+            .select('username, created_at')
+            .eq('id', user.id)
+            .maybeSingle();
+      }
+
+      setState(() {
+        username = profile != null ? profile['username'] as String? : null;
+        email = user.email;
+        joinedAt = (profile != null && profile['created_at'] != null)
+            ? DateTime.parse(profile['created_at'])
+            : null;
+        _usernameController.text = username ?? '';
+        userId = profile != null && profile.containsKey('userId') ? profile['userId']?.toString() : null;
+        photoUrl = profile != null && profile.containsKey('avatar_url') ? profile['avatar_url'] as String? : null;
+        isLoading = false;
+      });
+
+      if (profile == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text(
+                'Profil Tidak Ditemukan',
+                style: TextStyle(color: Colors.red),
+              ),
+              content: const Text('Data profil tidak ditemukan di database.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        });
+      }
+    } catch (e) {
+      print('Error in fetchUserData: $e');
       setState(() {
         isLoading = false;
       });
-      return;
-    }
-    final profile = await Supabase.instance.client
-        .from('profiles')
-        .select('username, created_at, userId, avatar_url')
-        .eq('id', user.id)
-        .maybeSingle();
-    setState(() {
-      username = profile != null ? profile['username'] as String? : null;
-      email = user.email;
-      joinedAt = (profile != null && profile['created_at'] != null)
-          ? DateTime.parse(profile['created_at'])
-          : null;
-      _usernameController.text = username ?? '';
-      userId = profile != null ? profile['userId']?.toString() : null;
-      photoUrl = profile != null ? profile['avatar_url'] as String? : null;
-      isLoading = false;
-    });
-    if (profile == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text(
-              'Profil Tidak Ditemukan',
-              style: TextStyle(color: Colors.red),
-            ),
-            content: const Text('Data profil tidak ditemukan di database.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat data profil: $e')),
         );
       });
     }

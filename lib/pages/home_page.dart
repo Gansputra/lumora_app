@@ -27,23 +27,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchProfilePhoto() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        setState(() {
+          _photoUrl = null;
+          _profileLoading = false;
+        });
+        return;
+      }
+      final profile = await Supabase.instance.client
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
+      setState(() {
+        _photoUrl = profile != null ? profile['avatar_url'] as String? : null;
+        _profileLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching profile photo: $e');
       setState(() {
         _photoUrl = null;
         _profileLoading = false;
       });
-      return;
     }
-    final profile = await Supabase.instance.client
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .maybeSingle();
-    setState(() {
-      _photoUrl = profile != null ? profile['avatar_url'] as String? : null;
-      _profileLoading = false;
-    });
   }
 
   @override

@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:lumora_app/widgets/animated_dots_loader.dart';
 import '../services/file_parser.dart';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -21,7 +20,6 @@ class HalamanRingkas extends StatefulWidget {
 class _SummarizerPageState extends State<HalamanRingkas> {
   bool _inputTeks = true;
   String? _fileName;
-  String? _fileContent;
   final TextEditingController _controller = TextEditingController();
   String _result = "";
   bool _loading = false;
